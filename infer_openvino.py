@@ -10,7 +10,7 @@ infer_openvino.py  ─  [수업 1단계] OpenVINO 모델로 추론하기
   5. 결과 확인    : 정상 / 불량 + 확률  (콘솔 출력 + 이미지 표시)
 
 [입력 방식 전환]
-  아래 INPUT_MODE 값만 바꿔서 실행한다.
+  실행 후 image 또는 webcam을 입력한다.
     "image"  → TEST_IMAGE_PATH 의 테스트 이미지로 추론
     "webcam" → 웹캠을 켜고 SPACE 키로 촬영한 이미지로 추론
 
@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 import openvino as ov
 
 # ── 설정 ─────────────────────────────────────────────────────────
-INPUT_MODE      = "image"                        # "image" 또는 "webcam"
 MODEL_XML       = "./weights/leather_model.xml"   # .bin 은 같은 이름으로 자동 탐색
 TEST_IMAGE_PATH = "./test_images/sample.jpg"      # 테스트 이미지 경로
 INPUT_IMG_SIZE  = (224, 224)
@@ -113,6 +112,12 @@ def show_result(pil_img, label, prob):
 # ─────────────────────────────────────────────────────────────────
 # 5. 이미지 입력 : 테스트 이미지 파일 / 웹캠 촬영
 # ─────────────────────────────────────────────────────────────────
+def get_image_from_file():
+    if not os.path.exists(TEST_IMAGE_PATH):
+        raise FileNotFoundError(f"테스트 이미지가 없습니다: {TEST_IMAGE_PATH}")
+    return Image.open(TEST_IMAGE_PATH).convert("RGB")
+
+
 def get_image_from_webcam():
     import cv2  # 웹캠 모드에서만 필요하므로 여기서 import
 
@@ -160,14 +165,14 @@ def get_image_from_webcam():
 def main():
     compiled_model = load_model()
     
-    INPUT_MODE = input("입력 모드를 선택하세요 (image/webcam): ").lower()
+    input_mode = input("입력 모드를 선택하세요 (image/webcam): ").strip().lower()
 
-    if INPUT_MODE == "image":
+    if input_mode == "image":
         pil_img = get_image_from_file()
-    elif INPUT_MODE == "webcam":
+    elif input_mode == "webcam":
         pil_img = get_image_from_webcam()
     else:
-        raise ValueError("INPUT_MODE 는 'image' 또는 'webcam' 이어야 합니다.")
+        raise ValueError("입력 모드는 'image' 또는 'webcam' 이어야 합니다.")
 
     print("[3] 추론 중...")
     label, prob = predict(compiled_model, pil_img)
